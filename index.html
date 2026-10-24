@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Сладко у Светы</title>
+
+<script>
+/* =====================================================================
+   ДАННЫЕ ПРИЛОЖЕНИЯ — меняйте только этот блок.
+   Правила: текст пишите внутри кавычек "...", после каждой строки
+   ставьте запятую. Сейчас здесь ТЕСТОВЫЕ данные.
+   ===================================================================== */
+const ДАННЫЕ = {
+  заголовок: "Сладко у Светы",
+  подзаголовок: "Домашние торты и капкейки на заказ. Москва",
+
+  // Короткие условия под заголовком (можно добавить или убрать строки)
+  условия: [
+    "Заказ минимум за 3 дня",
+    "Предоплата 50%",
+    "Самовывоз у м. Сокол или доставка по Москве от 500 ₽"
+  ],
+
+  // Контакты. WhatsApp: только цифры, начиная с 7
+  whatsapp: "79991234567",
+  telegram: "svetlana",
+
+  // Ассортимент. Чтобы добавить позицию — скопируйте блок { ... }, вместе с запятой
+  ассортимент: [
+    {
+      название: "Медовик",
+      цена: "3 500 ₽",
+      заЧто: "за 2 кг",
+      описание: "Классический, восемь медовых коржей и нежный сметанный крем.",
+      фото: "foto/medovik.jpg",
+      текстЗаказа: "Здравствуйте, Света! Хочу заказать Медовик (3 500 ₽ за 2 кг). Подскажите, пожалуйста, свободные даты."
+    },
+    {
+      название: "Наполеон",
+      цена: "3 800 ₽",
+      заЧто: "за 2 кг",
+      описание: "Хрустящие коржи на сливочном масле и заварной крем.",
+      фото: "foto/napoleon.jpg",
+      текстЗаказа: "Здравствуйте, Света! Хочу заказать Наполеон (3 800 ₽ за 2 кг). Подскажите, пожалуйста, свободные даты."
+    },
+    {
+      название: "Капкейки",
+      цена: "350 ₽",
+      заЧто: "за штуку, от 6 шт.",
+      описание: "Восемь вкусов: ваниль, шоколад, красный бархат, морковный, лимон, солёная карамель, малина, фисташка.",
+      фото: "foto/cupcakes.jpg",
+      текстЗаказа: "Здравствуйте, Света! Хочу заказать капкейки (350 ₽ за штуку). Количество: ... Вкусы: ..."
+    },
+    {
+      название: "Бенто-торт",
+      цена: "1 900 ₽",
+      заЧто: "за торт",
+      описание: "Маленький тортик на 1–2 человек, надпись любая.",
+      фото: "foto/bento.jpg",
+      текстЗаказа: "Здравствуйте, Света! Хочу заказать бенто-торт (1 900 ₽). Надпись: ... Дата: ..."
+    }
+  ],
+
+  // Надписи на кнопках и внизу
+  кнопкаЗаказать: "Заказать",
+  подвал: "Пишите — отвечу и подберу дату"
+};
+/* ===================== КОНЕЦ БЛОКА ДАННЫХ ===================== */
+</script>
+
+<!-- Скрипт Телеграма. Без него страница тоже работает (в обычном браузере). -->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<style>
+  :root {
+    --bg: #FFF6EE;        /* кремовый фон */
+    --card: #FFFFFF;
+    --text: #4A3434;
+    --muted: #8C7373;
+    --accent: #E88AA3;    /* розовый */
+    --accent-text: #FFFFFF;
+    --soft: #FCE3EA;      /* бледно-розовый */
+    --price: #C2557A;
+    --line: #F2DCD3;
+    color-scheme: light;
+  }
+  :root[data-theme="dark"] {
+    --bg: #2A2224;
+    --card: #362C2F;
+    --text: #F7E9E4;
+    --muted: #C8B1B1;
+    --accent: #F0A3B8;
+    --accent-text: #3A2027;
+    --soft: #4A383D;
+    --price: #FFB3C8;
+    --line: #4A3D40;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+    font-size: 18px;
+    line-height: 1.5;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .page {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 24px max(16px, env(safe-area-inset-right)) calc(32px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    display: grid;
+    gap: 20px;
+  }
+  header { text-align: center; display: grid; gap: 8px; padding-top: 8px; }
+  h1 {
+    margin: 0;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 34px;
+    line-height: 1.15;
+    color: var(--price);
+  }
+  .sub { margin: 0; color: var(--muted); font-size: 18px; }
+  .terms {
+    list-style: none; margin: 8px 0 0; padding: 0;
+    display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+  }
+  .terms li {
+    background: var(--soft); color: var(--text);
+    padding: 6px 14px; border-radius: 999px; font-size: 15px;
+  }
+
+  .card {
+    background: var(--card);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 6px 20px -12px rgba(150, 80, 100, .45);
+  }
+  .photo {
+    aspect-ratio: 4 / 3;
+    max-width: 100%;
+    background: linear-gradient(135deg, var(--soft), var(--bg));
+    display: grid; place-items: center;
+  }
+  .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .photo .stub {
+    font-family: Georgia, serif; font-size: 26px; color: var(--price); opacity: .7;
+    padding: 16px; text-align: center;
+  }
+  .body { padding: 18px 20px 20px; display: grid; gap: 10px; }
+  .row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  h2 { margin: 0; font-size: 24px; line-height: 1.2; }
+  .price { font-size: 26px; font-weight: 700; color: var(--price); white-space: nowrap; }
+  .per { color: var(--muted); font-size: 15px; margin-top: -6px; text-align: right; }
+  .desc { margin: 0; color: var(--text); }
+
+  .btn {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 56px; width: 100%;
+    border: 0; border-radius: 16px;
+    background: var(--accent); color: var(--accent-text);
+    font: inherit; font-size: 19px; font-weight: 600;
+    text-decoration: none; cursor: pointer;
+  }
+  .btn:active { transform: scale(.98); }
+  .btn:focus-visible { outline: 3px solid var(--price); outline-offset: 3px; }
+  .btn.ghost { background: var(--soft); color: var(--text); }
+
+  footer { display: grid; gap: 12px; text-align: center; padding-top: 8px; }
+  footer p { margin: 0; color: var(--muted); }
+</style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <h1 id="title"></h1>
+      <p class="sub" id="subtitle"></p>
+      <ul class="terms" id="terms"></ul>
+    </header>
+
+    <main id="list" style="display:grid; gap:20px"></main>
+
+    <footer>
+      <p id="footer-text"></p>
+      <a class="btn" id="wa-link" href="#">Написать в WhatsApp</a>
+      <a class="btn ghost" id="tg-link" href="#">Написать в Телеграм</a>
+    </footer>
+  </div>
+
+<script>
+  const tg = window.Telegram && window.Telegram.WebApp;
+  const inTelegram = !!(tg && tg.initData !== undefined && tg.platform && tg.platform !== "unknown");
+
+  // --- Тема: в Телеграме берём светлую/тёмную из него, в браузере — из системы
+  function applyTheme() {
+    let dark;
+    if (inTelegram) dark = tg.colorScheme === "dark";
+    else dark = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches;
+    document.documentElement.dataset.theme = dark ? "dark" : "light";
+    if (inTelegram) {
+      const bg = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim();
+      try { tg.setHeaderColor(bg); tg.setBackgroundColor(bg); } catch (e) {}
+    }
+  }
+  applyTheme();
+  if (inTelegram) {
+    tg.ready();
+    tg.expand();
+    tg.onEvent("themeChanged", applyTheme);
+  } else if (window.matchMedia) {
+    matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyTheme);
+  }
+
+  // --- Открытие ссылок: t.me внутри Телеграма, остальное — во внешнем браузере
+  function openLink(url) {
+    if (inTelegram) {
+      if (url.startsWith("https://t.me/")) {
+        tg.openTelegramLink(url);
+        tg.close();
+      } else {
+        tg.openLink(url);
+      }
+    } else {
+      window.open(url, "_blank") || (location.href = url);
+    }
+  }
+  function bindLink(el, url) {
+    el.href = url;
+    el.addEventListener("click", e => { e.preventDefault(); openLink(url); });
+  }
+  const waUrl = text => "https://wa.me/" + ДАННЫЕ.whatsapp + (text ? "?text=" + encodeURIComponent(text) : "");
+
+  // --- Заполняем страницу из блока ДАННЫЕ
+  document.title = ДАННЫЕ.заголовок;
+  document.getElementById("title").textContent = ДАННЫЕ.заголовок;
+  document.getElementById("subtitle").textContent = ДАННЫЕ.подзаголовок;
+  document.getElementById("footer-text").textContent = ДАННЫЕ.подвал;
+
+  const terms = document.getElementById("terms");
+  (ДАННЫЕ.условия || []).forEach(t => {
+    const li = document.createElement("li");
+    li.textContent = t;
+    terms.appendChild(li);
+  });
+
+  const list = document.getElementById("list");
+  ДАННЫЕ.ассортимент.forEach(item => {
+    const card = document.createElement("article");
+    card.className = "card";
+
+    const photo = document.createElement("div");
+    photo.className = "photo";
+    const img = document.createElement("img");
+    img.src = item.фото;
+    img.alt = item.название;
+    img.loading = "lazy";
+    img.addEventListener("error", () => {
+      const stub = document.createElement("div");
+      stub.className = "stub";
+      stub.textContent = item.название;
+      img.replaceWith(stub);
+    });
+    photo.appendChild(img);
+
+    const body = document.createElement("div");
+    body.className = "body";
+    body.innerHTML = '<div class="row"><h2></h2><span class="price"></span></div><div class="per"></div><p class="desc"></p>';
+    body.querySelector("h2").textContent = item.название;
+    body.querySelector(".price").textContent = item.цена;
+    body.querySelector(".per").textContent = item.заЧто || "";
+    body.querySelector(".desc").textContent = item.описание;
+
+    const btn = document.createElement("a");
+    btn.className = "btn";
+    btn.textContent = ДАННЫЕ.кнопкаЗаказать;
+    bindLink(btn, waUrl(item.текстЗаказа));
+    body.appendChild(btn);
+
+    card.append(photo, body);
+    list.appendChild(card);
+  });
+
+  bindLink(document.getElementById("wa-link"), waUrl("Здравствуйте, Света!"));
+  bindLink(document.getElementById("tg-link"), "https://t.me/" + ДАННЫЕ.telegram);
+</script>
+</body>
+</html>
